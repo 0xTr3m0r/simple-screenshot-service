@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Take Website Screenshot</title>
+</head>
+<body>
+  <h2>Enter a URL to Screenshot</h2>
+  <form id="urlForm">
+    <input type="url" id="urlInput" placeholder="https://example.com" required>
+    <button type="submit">Take Screenshot</button>
+  </form>
+
+  <p id="output"></p>
+  <img id="screenshot" style="max-width: 100%; margin-top: 20px; display: none;"/>
+
+  <script>
+    document.getElementById("urlForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const url = document.getElementById("urlInput").value;
+      document.getElementById("output").textContent = "Taking screenshot...";
+
+      const response = await fetch("/screenshot", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ url })
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        document.getElementById("output").textContent = "Screenshot taken!";
+        const img = document.getElementById("screenshot");
+        img.src = result.imageUrl;
+        img.style.display = "block";
+      } else {
+        document.getElementById("output").textContent = "Failed to take screenshot.";
+      }
+    });
+  </script>
+</body>
+</html>
