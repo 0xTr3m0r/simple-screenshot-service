@@ -3,12 +3,27 @@ import puppeteer from "puppeteer";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { Sequelize } from "sequelize";
+import ScreenshotModel from "./models/ScreenShots.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 3000;
+
+const sequelize = new Sequelize("your_db", "username", "password", {
+  host: "localhost",
+  dialect: "mysql",
+});
+
+const Screenshot = ScreenshotModel(sequelize, Sequelize.DataTypes);
+
+sequelize.sync().then(() => {
+  console.log("Database synced successfully.");
+}).catch((err) => {
+  console.error("Error syncing database:", err);
+});
 
 app.use(express.json());
 app.use(express.static("public"));
@@ -29,6 +44,8 @@ app.post("/screenshot", async (req, res) => {
     await page.goto(url, { waitUntil: "networkidle2" });
     await page.screenshot({ path: filepath, fullPage: true });
     await browser.close();
+
+    await Screenshot.create({ filename, url });
 
     res.json({ success: true, imageUrl: `/${filename}` });
   } catch (error) {
